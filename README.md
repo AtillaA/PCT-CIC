@@ -23,3 +23,37 @@ Local feature aggregation is an operation that assembles point features of a giv
 
 
 Apart from the baseline datasets that are used in PCT (which are ModelNet40 for point cloud classification, ShapeNet for object segmentation, and Stanford 3D Indoor Dataset), we will be exploring various other point cloud datasets (e.g. Partnet) to evaluate and verify our findings.
+
+
+## Citation  
+
+CurveNet: 
+```
+@InProceedings{Xiang_2021_ICCV,
+    author    = {Xiang, Tiange and Zhang, Chaoyi and Song, Yang and Yu, Jianhui and Cai, Weidong},
+    title     = {Walk in the Cloud: Learning Curves for Point Clouds Shape Analysis},
+    booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+    month     = {October},
+    year      = {2021},
+    pages     = {915-924}
+}
+```
+
+PCT:
+
+```
+@article{Guo_2021,
+   title={PCT: Point cloud transformer},
+   volume={7},
+   ISSN={2096-0662},
+   url={http://dx.doi.org/10.1007/s41095-021-0229-5},
+   DOI={10.1007/s41095-021-0229-5},
+   number={2},
+   journal={Computational Visual Media},
+   publisher={Springer Science and Business Media LLC},
+   author={Guo, Meng-Hao and Cai, Jun-Xiong and Liu, Zheng-Ning and Mu, Tai-Jiang and Martin, Ralph R. and Hu, Shi-Min},
+   year={2021},
+   month={Apr},
+   pages={187–199}
+}
+```
