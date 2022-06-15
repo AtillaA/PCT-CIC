@@ -1,8 +1,6 @@
-# Machine-Learning-for-3D-Geometry
+# Improving Point Cloud Shape Analysis of a Point Cloud Transformer using Curve Aggregation
 
-# PCT: Point Cloud Transformer
-
-This README will be updated soon with required definitions and citations regarding the original PCT implementation by Meng-Hao et al.
+This README will be updated soon, with required definitions and citations regarding the original PCT implementation by Meng-Hao et al.
 
 Paper link: https://arxiv.org/pdf/2012.09688.pdf
 
