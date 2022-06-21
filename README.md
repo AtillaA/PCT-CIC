@@ -12,6 +12,9 @@ Repository: https://github.com/MenghaoGuo/PCT
 * 2022.6.21 : Tasks carried out by date
 * 2022.6.29 : ..
 
+## Environment to reproduce the trainings
+
+[yaml file](project_env.yaml)
 
 ## Astract
 
