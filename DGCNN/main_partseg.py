@@ -26,6 +26,9 @@ from util import cal_loss, IOStream
 import sklearn.metrics as metrics
 from plyfile import PlyData, PlyElement
 
+#Using PCT
+from pct_partseg_torch import Point_Transformer_partseg
+
 global class_cnts
 class_indexs = np.zeros((16,), dtype=int)
 global visual_warning
@@ -149,14 +152,16 @@ def train(args, io):
     test_loader = DataLoader(ShapeNetPart(partition='test', num_points=args.num_points, class_choice=args.class_choice), 
                             num_workers=8, batch_size=args.test_batch_size, shuffle=True, drop_last=False)
     
-    # device = torch.device("cuda" if args.cuda else "cpu")
-    device=torch.device('cpu')
+    device = torch.device("cuda" if args.cuda else "cpu")
+    # device=torch.device('cpu')
 
     #Try to load models
     seg_num_all = train_loader.dataset.seg_num_all
     seg_start_index = train_loader.dataset.seg_start_index
     if args.model == 'dgcnn':
         model = DGCNN_partseg(args, seg_num_all).to(device)
+    elif args.model == 'pct':
+        model = Point_Transformer_partseg(seg_num_all).to(device)
     else:
         raise Exception("Not implemented")
     print(str(model))
@@ -302,6 +307,8 @@ def test(args, io):
     partseg_colors = test_loader.dataset.partseg_colors
     if args.model == 'dgcnn':
         model = DGCNN_partseg(args, seg_num_all).to(device)
+    elif args.model == 'pct':
+        model = Point_Transformer_partseg(seg_num_all).to(device)
     else:
         raise Exception("Not implemented")
 
@@ -358,7 +365,7 @@ if __name__ == "__main__":
     parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
                         help='Name of the experiment')
     parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
-                        choices=['dgcnn'],
+                        choices=['dgcnn', 'pct'],
                         help='Model to use, [dgcnn]')
     parser.add_argument('--dataset', type=str, default='shapenetpart', metavar='N',
                         choices=['shapenetpart'])

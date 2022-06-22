@@ -1,6 +1,6 @@
 import torch 
 from torch import nn 
-from torch.contrib import concat 
+from torch import cat as concat 
 import numpy as np 
 import math 
 
@@ -22,11 +22,11 @@ class Point_Transformer_partseg(nn.Module):
 
         self.conv_fuse = nn.Sequential(nn.Conv1d(512, 1024, kernel_size=1, bias=False),
                                    nn.BatchNorm1d(1024),
-                                   nn.LeakyReLU(scale=0.2))
+                                   nn.LeakyReLU(negative_slope=0.2))
 
         self.label_conv = nn.Sequential(nn.Conv1d(16, 64, kernel_size=1, bias=False),
                                    nn.BatchNorm1d(64),
-                                   nn.LeakyReLU(scale=0.2))
+                                   nn.LeakyReLU(negative_slope=0.2))
 
         self.convs1 = nn.Conv1d(1024 * 3 + 64, 512, 1)
         self.dp1 = nn.Dropout(0.5)
@@ -47,7 +47,7 @@ class Point_Transformer_partseg(nn.Module):
         x4 = self.sa4(x3)
         x = concat((x1, x2, x3, x4), dim=1)
         x = self.conv_fuse(x)
-        x_max = torch.max(x, 2)
+        x_max, x_max_indices = torch.max(x, 2)
         x_avg = torch.mean(x, 2)
         x_max_feature = x_max.view(batch_size, -1).unsqueeze(-1).repeat(1, 1, N)
         x_avg_feature = x_avg.view(batch_size, -1).unsqueeze(-1).repeat(1, 1, N)
@@ -68,7 +68,8 @@ class SA_Layer(nn.Module):
         super(SA_Layer, self).__init__()
         self.q_conv = nn.Conv1d(channels, channels // 4, 1, bias=False)
         self.k_conv = nn.Conv1d(channels, channels // 4, 1, bias=False)
-        self.q_conv.conv.weight = self.k_conv.conv.weight 
+        #self.q_conv.conv.weight = self.k_conv.conv.weight 
+        self.q_conv.weight = self.k_conv.weight 
         self.v_conv = nn.Conv1d(channels, channels, 1)
         self.trans_conv = nn.Conv1d(channels, channels, 1)
         self.after_norm = nn.BatchNorm1d(channels)
@@ -79,10 +80,10 @@ class SA_Layer(nn.Module):
         x_q = self.q_conv(x).permute(0, 2, 1) # b, n, c 
         x_k = self.k_conv(x)# b, c, n        
         x_v = self.v_conv(x)
-        energy = nn.bmm(x_q, x_k) # b, n, n 
+        energy = torch.bmm(x_q, x_k) # b, n, n 
         attention = self.softmax(energy)
         attention = attention / (1e-9 + attention.sum(dim=1, keepdims=True))
-        x_r = nn.bmm(x_v, attention) # b, c, n 
+        x_r = torch.bmm(x_v, attention) # b, c, n 
         x_r = self.act(self.after_norm(self.trans_conv(x - x_r)))
         x = x + x_r
         return x
