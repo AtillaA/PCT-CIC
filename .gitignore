@@ -1,2 +1,7 @@
 outputs/
 *__pycache__
+
+
+.vscode
+
+DGCNN/hdf5data/
