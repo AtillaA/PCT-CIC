@@ -29,6 +29,11 @@ from plyfile import PlyData, PlyElement
 #Using PCT
 from pct_partseg_torch import Point_Transformer_partseg
 
+#Using Tensorboard
+from torch.utils.tensorboard import SummaryWriter
+
+
+
 global class_cnts
 class_indexs = np.zeros((16,), dtype=int)
 global visual_warning
@@ -52,7 +57,6 @@ def _init_():
     os.system('cp model.py outputs' + '/' + args.exp_name + '/' + 'model.py.backup')
     os.system('cp util.py outputs' + '/' + args.exp_name + '/' + 'util.py.backup')
     os.system('cp data.py outputs' + '/' + args.exp_name + '/' + 'data.py.backup')
-
 
 def calculate_shape_IoU(pred_np, seg_np, label, class_choice, visual=False):
     if not visual:
@@ -169,6 +173,10 @@ def train(args, io):
     model = nn.DataParallel(model)
     print("Let's use", torch.cuda.device_count(), "GPUs!")
 
+    # Tensorboard Log Model   
+    tensorBoardOutputPath = "outputs/" + args.exp_name # Tensorboard needs to be started in .../DGCNN/
+    writer = SummaryWriter(tensorBoardOutputPath)
+
     if args.use_sgd:
         print("Use SGD")
         opt = optim.SGD(model.parameters(), lr=args.lr*100, momentum=args.momentum, weight_decay=1e-4)
@@ -244,6 +252,11 @@ def train(args, io):
                                                                                                   np.mean(train_ious))
         io.cprint(outstr)
 
+        writer.add_scalar("Loss/Train", train_loss*1.0/count, epoch)
+        writer.add_scalar("Accuracy/Train", train_acc, epoch)
+        writer.add_scalar("Average Accuracy/Train", avg_per_class_acc, epoch)
+        writer.add_scalar("IOU/Train", np.mean(train_ious), epoch)
+
         ####################
         # Test
         ####################
@@ -291,6 +304,13 @@ def train(args, io):
                                                                                               avg_per_class_acc,
                                                                                               np.mean(test_ious))
         io.cprint(outstr)
+
+        #Tensorboard
+        writer.add_scalar("Loss/Test", test_loss*1.0/count, epoch)
+        writer.add_scalar("Accuracy/Test", test_acc, epoch)
+        writer.add_scalar("Average Accuracy/Test", avg_per_class_acc, epoch)
+        writer.add_scalar("IOU/Test", np.mean(test_ious), epoch)
+
         if np.mean(test_ious) >= best_test_iou:
             best_test_iou = np.mean(test_ious)
             torch.save(model.state_dict(), 'outputs/%s/models/model.t7' % args.exp_name)
