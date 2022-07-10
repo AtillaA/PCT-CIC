@@ -5,3 +5,4 @@ outputs/
 .vscode
 
 DGCNN/hdf5data/
+*.h5
