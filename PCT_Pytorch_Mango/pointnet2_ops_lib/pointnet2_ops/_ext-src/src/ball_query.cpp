@@ -25,7 +25,7 @@ at::Tensor ball_query(at::Tensor new_xyz, at::Tensor xyz, const float radius,
                                     radius, nsample, new_xyz.data_ptr<float>(),
                                     xyz.data_ptr<float>(), idx.data_ptr<int>());
   } else {
-    AT_ASSERT(false, "CPU not supported");
+    TORCH_CHECK(false, "CPU not supported");
   }
 
   return idx;

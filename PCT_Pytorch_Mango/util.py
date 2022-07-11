@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
-from pointnet2_ops import pointnet2_utils
+# from pointnet2_ops import pointnet2_utils
+from pointnet2_ops_lib.pointnet2_ops.pointnet2_utils import furthest_point_sample
 
 def cal_loss(pred, gold, smoothing=True):
     ''' Calculate cross entropy loss, apply label smoothing if needed. '''
@@ -123,7 +124,8 @@ def sample_and_group(npoint, radius, nsample, xyz, points):
     S = npoint 
     xyz = xyz.contiguous()
 
-    fps_idx = pointnet2_utils.furthest_point_sample(xyz, npoint).long() # [B, npoint]
+    # fps_idx = pointnet2_utils.furthest_point_sample(xyz, npoint).long() # [B, npoint]
+    fps_idx = furthest_point_sample(xyz, npoint).long() # [B, npoint]
     new_xyz = index_points(xyz, fps_idx) 
     new_points = index_points(points, fps_idx)
     # new_xyz = xyz[:]
