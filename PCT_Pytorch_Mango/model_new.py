@@ -55,6 +55,7 @@ class Pct(nn.Module):
         # B, D, N
         x = F.relu(self.bn2(self.conv2(x)))
         x = x.permute(0, 2, 1)
+        print("Sample_and_group reached ======================")
         new_xyz, new_feature = sample_and_group(npoint=512, radius=0.15, nsample=32, xyz=xyz, points=x)         
         feature_0 = self.gather_local_0(new_feature)
         feature = feature_0.permute(0, 2, 1)
