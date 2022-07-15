@@ -182,6 +182,81 @@ def sample_and_group(npoint, radius, nsample, xyz, points):
     return new_xyz, new_points
 
 
+
+class CIC(nn.Module):
+    def __init__(self, npoint, radius, k, in_channels, output_channels, bottleneck_ratio=2, mlp_num=2, curve_config=None):
+        super(CIC, self).__init__()
+        self.in_channels = in_channels
+        self.output_channels = output_channels
+        self.bottleneck_ratio = bottleneck_ratio
+        self.radius = radius
+        self.k = k
+        self.npoint = npoint
+
+        planes = in_channels // bottleneck_ratio
+
+        self.use_curve = curve_config is not None
+        if self.use_curve:
+            self.curveaggregation = CurveAggregation(planes)
+            self.curvegrouping = CurveGrouping(planes, k, curve_config[0], curve_config[1])
+
+        self.conv1 = nn.Sequential(
+            nn.Conv1d(in_channels,
+                      planes,
+                      kernel_size=1,
+                      bias=False),
+            nn.BatchNorm1d(in_channels // bottleneck_ratio),
+            nn.LeakyReLU(negative_slope=0.2, inplace=True))
+
+        self.conv2 = nn.Sequential(
+            nn.Conv1d(planes, output_channels, kernel_size=1, bias=False),
+            nn.BatchNorm1d(output_channels))
+
+        if in_channels != output_channels:
+            self.shortcut = nn.Sequential(
+                nn.Conv1d(in_channels,
+                          output_channels,
+                          kernel_size=1,
+                          bias=False),
+                nn.BatchNorm1d(output_channels))
+
+        self.relu = nn.LeakyReLU(negative_slope=0.2, inplace=True)
+
+        self.maxpool = MaskedMaxPool(npoint, radius, k)
+
+        self.lpfa = LPFA(planes, planes, k, mlp_num=mlp_num, initial=False)
+
+    def forward(self, xyz, x):
+ 
+        # max pool
+        if xyz.size(-1) != self.npoint:
+            xyz, x = self.maxpool(
+                xyz.transpose(1, 2).contiguous(), x)
+            xyz = xyz.transpose(1, 2)
+
+        shortcut = x
+        x = self.conv1(x)  # bs, c', n
+
+        idx = knn(xyz, self.k)
+
+        if self.use_curve:
+            # curve grouping
+            curves = self.curvegrouping(x, xyz, idx[:,:,1:]) # avoid self-loop
+
+            # curve aggregation
+            x = self.curveaggregation(x, curves)
+
+        x = self.lpfa(x, xyz, idx=idx[:,:,:self.k]) #bs, c', n, k
+
+        x = self.conv2(x)  # bs, c, n
+
+        if self.in_channels != self.output_channels:
+            shortcut = self.shortcut(shortcut)
+
+        x = self.relu(x + shortcut)
+
+        return xyz, x
+
 class CurveAggregation(nn.Module):
     def __init__(self, in_channel):
         super(CurveAggregation, self).__init__()
@@ -273,3 +348,20 @@ class CurveGrouping(nn.Module):
         curves = self.walk(xyz, x, idx, start_index)  #bs, c, c_n, c_l
         
         return curves
+
+class MaskedMaxPool(nn.Module):
+    def __init__(self, npoint, radius, k):
+        super(MaskedMaxPool, self).__init__()
+        self.npoint = npoint
+        self.radius = radius
+        self.k = k
+
+    def forward(self, xyz, features):
+        sub_xyz, neighborhood_features = sample_and_group(self.npoint, self.radius, self.k, xyz, features.transpose(1,2))
+
+        neighborhood_features = neighborhood_features.permute(0, 3, 1, 2).contiguous()
+        sub_features = F.max_pool2d(
+            neighborhood_features, kernel_size=[1, neighborhood_features.shape[3]]
+        )  # bs, c, n, 1
+        sub_features = torch.squeeze(sub_features, -1)  # bs, c, n
+        return sub_xyz, sub_features
