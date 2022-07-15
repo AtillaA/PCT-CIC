@@ -6,3 +6,5 @@ outputs/
 
 DGCNN/hdf5data/
 *.h5
+
+checkpoints
