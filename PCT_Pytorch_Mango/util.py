@@ -1,6 +1,11 @@
 import torch
 import torch.nn.functional as F
 # from pointnet2_ops import pointnet2_utils
+<<<<<<< HEAD
+=======
+# from pointnet2_ops_lib.pointnet2_ops.pointnet2_utils import furthest_point_sample
+import numpy as np
+>>>>>>> 78e8e8fb6df0debd7576bc3f504e844011bfb8d4
 
 def cal_loss(pred, gold, smoothing=True):
     ''' Calculate cross entropy loss, apply label smoothing if needed. '''
@@ -111,6 +116,7 @@ def knn_point(nsample, xyz, new_xyz):
 
     return group_idx
 
+<<<<<<< HEAD
 def get_dists(points1, points2):
     '''
     Calculate dists between two group points
@@ -125,6 +131,55 @@ def get_dists(points1, points2):
     dists -= 2 * torch.matmul(points1, points2.permute(0, 2, 1))
     dists = torch.where(dists < 0, torch.ones_like(dists) * 1e-7, dists) # Very Important for dist = 0.
     return torch.sqrt(dists).float()
+=======
+
+# ==== NEW ====
+# def fps(points, n_samples):
+#     """
+#     points: [N, 3] array containing the whole point cloud
+#     n_samples: samples you want in the sampled point cloud typically << N 
+#     """
+#     points = np.array(points)
+    
+#     # Represent the points by their indices in points
+#     points_left = np.arange(len(points)) # [P]
+
+#     # Initialise an array for the sampled indices
+#     sample_inds = np.zeros(n_samples, dtype='int') # [S]
+
+#     # Initialise distances to inf
+#     dists = np.ones_like(points_left) * float('inf') # [P]
+
+#     # Select a point from points by its index, save it
+#     selected = 0
+#     sample_inds[0] = points_left[selected]
+
+#     # Delete selected 
+#     points_left = np.delete(points_left, selected) # [P - 1]
+
+#     # Iteratively select points for a maximum of n_samples
+#     for i in range(1, n_samples):
+#         # Find the distance to the last added point in selected
+#         # and all the others
+#         last_added = sample_inds[i-1]
+        
+#         dist_to_last_added_point = (
+#             (points[last_added] - points[points_left])**2).sum(-1) # [P - i]
+
+#         # If closer, updated distances
+#         dists[points_left] = np.minimum(dist_to_last_added_point, 
+#                                         dists[points_left]) # [P - i]
+
+#         # We want to pick the one that has the largest nearest neighbour
+#         # distance to the sampled points
+#         selected = np.argmax(dists[points_left])
+#         sample_inds[i] = points_left[selected]
+
+#         # Update points_left
+#         points_left = np.delete(points_left, selected)
+
+#     return points[sample_inds]
+>>>>>>> 78e8e8fb6df0debd7576bc3f504e844011bfb8d4
 
 def fps(xyz, M):
     """
@@ -146,6 +201,27 @@ def fps(xyz, M):
         inds = torch.max(dists, dim=1)[1]
     return centroids
 
+<<<<<<< HEAD
+=======
+def get_dists(points1, points2):
+    '''
+    Calculate dists between two group points
+    :param cur_point: shape=(B, M, C)
+    :param points: shape=(B, N, C)
+    :return:
+    '''
+    B, M, C = points1.shape
+    _, N, _ = points2.shape
+    dists = torch.sum(torch.pow(points1, 2), dim=-1).view(B, M, 1) + \
+            torch.sum(torch.pow(points2, 2), dim=-1).view(B, 1, N)
+    dists -= 2 * torch.matmul(points1, points2.permute(0, 2, 1))
+    dists = torch.where(dists < 0, torch.ones_like(dists) * 1e-7, dists) # Very Important for dist = 0.
+    return torch.sqrt(dists).float()
+
+# ===========
+
+
+>>>>>>> 78e8e8fb6df0debd7576bc3f504e844011bfb8d4
 def sample_and_group(npoint, radius, nsample, xyz, points):
     """
     Input:
@@ -163,18 +239,34 @@ def sample_and_group(npoint, radius, nsample, xyz, points):
     xyz = xyz.contiguous()
 
     # fps_idx = pointnet2_utils.furthest_point_sample(xyz, npoint).long() # [B, npoint]
+<<<<<<< HEAD
     fps_idx = fps(xyz, npoint).long()
 
     new_xyz = index_points(xyz, fps_idx)
+=======
+    # fps_idx = furthest_point_sample(xyz, npoint).long() # [B, npoint]
+    fps_idx = fps(xyz, npoint).long() # [B, npoint]
+    
+    
+    new_xyz = index_points(xyz, fps_idx) 
+>>>>>>> 78e8e8fb6df0debd7576bc3f504e844011bfb8d4
     new_points = index_points(points, fps_idx)
     # new_xyz = xyz[:]
     # new_points = points[:]
 
     idx = knn_point(nsample, xyz, new_xyz)
+<<<<<<< HEAD
     #idx = query_ball_point(radius, nsample, xyz, new_xyz)
     grouped_xyz = index_points(xyz, idx) # [B, npoint, nsample, C]
 
     grouped_xyz_norm = grouped_xyz - new_xyz.view(B, S, 1, C)
+=======
+
+    # idx = query_ball_point(radius, nsample, xyz, new_xyz)
+    # grouped_xyz = index_points(xyz, idx) # [B, npoint, nsample, C]
+    # grouped_xyz_norm = grouped_xyz - new_xyz.view(B, S, 1, C)
+    
+>>>>>>> 78e8e8fb6df0debd7576bc3f504e844011bfb8d4
     grouped_points = index_points(points, idx)
     grouped_points_norm = grouped_points - new_points.view(B, S, 1, -1)
     

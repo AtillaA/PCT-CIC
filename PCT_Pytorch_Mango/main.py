@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from data import ModelNet40
-from model import Pct
+from model_new import Pct
 import numpy as np
 from torch.utils.data import DataLoader
 from util import cal_loss, IOStream
@@ -66,8 +66,11 @@ def train(args, io):
             opt.zero_grad()
 
             start_time = time.time()
+            print("Creating logits")
             logits = model(data)
+            print("Checking loss")
             loss = criterion(logits, label)
+            print("Loss backward")
             loss.backward()
             opt.step()
             end_time = time.time()
