@@ -66,11 +66,8 @@ def train(args, io):
             opt.zero_grad()
 
             start_time = time.time()
-            print("Creating logits")
             logits = model(data)
-            print("Checking loss")
             loss = criterion(logits, label)
-            print("Loss backward")
             loss.backward()
             opt.step()
             end_time = time.time()
