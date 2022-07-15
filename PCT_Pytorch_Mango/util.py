@@ -180,3 +180,96 @@ def sample_and_group(npoint, radius, nsample, xyz, points):
     
     new_points = torch.cat([grouped_points_norm, new_points.view(B, S, 1, -1).repeat(1, 1, nsample, 1)], dim=-1)
     return new_xyz, new_points
+
+
+class CurveAggregation(nn.Module):
+    def __init__(self, in_channel):
+        super(CurveAggregation, self).__init__()
+        self.in_channel = in_channel
+        mid_feature = in_channel // 2
+        self.conva = nn.Conv1d(in_channel,
+                               mid_feature,
+                               kernel_size=1,
+                               bias=False)
+        self.convb = nn.Conv1d(in_channel,
+                               mid_feature,
+                               kernel_size=1,
+                               bias=False)
+        self.convc = nn.Conv1d(in_channel,
+                               mid_feature,
+                               kernel_size=1,
+                               bias=False)
+        self.convn = nn.Conv1d(mid_feature,
+                               mid_feature,
+                               kernel_size=1,
+                               bias=False)
+        self.convl = nn.Conv1d(mid_feature,
+                               mid_feature,
+                               kernel_size=1,
+                               bias=False)
+        self.convd = nn.Sequential(
+            nn.Conv1d(mid_feature * 2,
+                      in_channel,
+                      kernel_size=1,
+                      bias=False),
+            nn.BatchNorm1d(in_channel))
+        self.line_conv_att = nn.Conv2d(in_channel,
+                                       1,
+                                       kernel_size=1,
+                                       bias=False)
+
+    def forward(self, x, curves):
+        curves_att = self.line_conv_att(curves)  # bs, 1, c_n, c_l
+
+        curver_inter = torch.sum(curves * F.softmax(curves_att, dim=-1), dim=-1)  #bs, c, c_n
+        curves_intra = torch.sum(curves * F.softmax(curves_att, dim=-2), dim=-2)  #bs, c, c_l
+
+        curver_inter = self.conva(curver_inter) # bs, mid, n
+        curves_intra = self.convb(curves_intra) # bs, mid ,n
+
+        x_logits = self.convc(x).transpose(1, 2).contiguous()
+        x_inter = F.softmax(torch.bmm(x_logits, curver_inter), dim=-1) # bs, n, c_n
+        x_intra = F.softmax(torch.bmm(x_logits, curves_intra), dim=-1) # bs, l, c_l
+        
+
+        curver_inter = self.convn(curver_inter).transpose(1, 2).contiguous()
+        curves_intra = self.convl(curves_intra).transpose(1, 2).contiguous()
+
+        x_inter = torch.bmm(x_inter, curver_inter)
+        x_intra = torch.bmm(x_intra, curves_intra)
+
+        curve_features = torch.cat((x_inter, x_intra),dim=-1).transpose(1, 2).contiguous()
+        x = x + self.convd(curve_features)
+
+        return F.leaky_relu(x, negative_slope=0.2)
+
+
+
+#CurveNet Grouping and aggregation
+
+class CurveGrouping(nn.Module):
+    def __init__(self, in_channel, k, curve_num, curve_length):
+        super(CurveGrouping, self).__init__()
+        self.curve_num = curve_num
+        self.curve_length = curve_length
+        self.in_channel = in_channel
+        self.k = k
+
+        self.att = nn.Conv1d(in_channel, 1, kernel_size=1, bias=False)
+
+        self.walk = Walk(in_channel, k, curve_num, curve_length)
+
+    def forward(self, x, xyz, idx):
+        # starting point selection in self attention style
+        x_att = torch.sigmoid(self.att(x))
+        x = x * x_att
+
+        _, start_index = torch.topk(x_att,
+                                    self.curve_num,
+                                    dim=2,
+                                    sorted=False)
+        start_index = start_index.squeeze().unsqueeze(2)
+
+        curves = self.walk(xyz, x, idx, start_index)  #bs, c, c_n, c_l
+        
+        return curves
