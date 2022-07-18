@@ -1,19 +1,46 @@
 import torch 
 from torch import nn 
 from torch import cat as concat 
+import torch.nn.functional as F
 import numpy as np 
 import math 
+from util import sample_and_group 
 
+class Local_op(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(Local_op, self).__init__()
+        self.conv1 = nn.Conv1d(in_channels, out_channels, kernel_size=1, bias=False)
+        self.conv2 = nn.Conv1d(out_channels, out_channels, kernel_size=1, bias=False)
+        self.bn1 = nn.BatchNorm1d(out_channels)
+        self.bn2 = nn.BatchNorm1d(out_channels)
+
+    def forward(self, x):
+        b, n, s, d = x.size()  # torch.Size([32, 512, 32, 6]) 
+        x = x.permute(0, 1, 3, 2)   
+        x = x.reshape(-1, d, s) 
+        batch_size, _, N = x.size()
+        x = F.relu(self.bn1(self.conv1(x))) # B, D, N
+        x = F.relu(self.bn2(self.conv2(x))) # B, D, N
+        x = F.adaptive_max_pool1d(x, 1).view(batch_size, -1)
+        x = x.reshape(b, n, -1).permute(0, 2, 1)
+        return x
 
 class Point_Transformer_partseg(nn.Module):
     def __init__(self, part_num=50):
         super(Point_Transformer_partseg, self).__init__()
         self.part_num = part_num
-        self.conv1 = nn.Conv1d(3, 128, kernel_size=1, bias=False)
-        self.conv2 = nn.Conv1d(128, 128, kernel_size=1, bias=False)
+        self.conv1 = nn.Conv1d(3, 64, kernel_size=1, bias=False)
+        self.conv2 = nn.Conv1d(64, 64, kernel_size=1, bias=False)
 
-        self.bn1 = nn.BatchNorm1d(128)
-        self.bn2 = nn.BatchNorm1d(128)
+        self.bn1 = nn.BatchNorm1d(64)
+        self.bn2 = nn.BatchNorm1d(64)
+
+        self.pos_xyz = nn.Conv1d(3, 128, 1)
+        self.gather_local_0 = Local_op(in_channels=128, out_channels=128)
+        self.gather_local_1 = Local_op(in_channels=256, out_channels=256)
+
+        self.conv_intermediate = nn.Conv1d(256, 128, kernel_size=1, bias=False)
+        self.bn_int = nn.BatchNorm1d(128)
 
         self.sa1 = SA_Layer(128)
         self.sa2 = SA_Layer(128)
@@ -38,17 +65,42 @@ class Point_Transformer_partseg(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, x, cls_label):
+        # xyz = x
+        # print(N)
         batch_size, _, N = x.size()
-        
+        xyz = x.permute(0, 2, 1)
         # Grey: Input Embedding
         x = self.relu(self.bn1(self.conv1(x))) # B, D, N
         x = self.relu(self.bn2(self.conv2(x)))
 
+        #Include sample and grouping
+        x = x.permute(0, 2, 1)
+        # print(x_sampling.shape)
+        # print(xyz.shape, x.shape)
+        new_xyz, new_feature = sample_and_group(npoint=N, radius=0.15, nsample=32, xyz=xyz, points=x)         
+        # print(f'new feature after sample_and_group1: {new_feature.shape}')
+        feature_0 = self.gather_local_0(new_feature)
+        # print(f'Feature after gather0: {feature_0.shape}')
+        feature = feature_0.permute(0, 2, 1)
+        # print(f'Feature after permute: {feature.shape}')
+        new_xyz, new_feature = sample_and_group(npoint=N, radius=0.2, nsample=32, xyz=new_xyz, points=feature) 
+        # print(f'new feature after sample_and_group2: {new_feature.shape}')
+        feature_1 = self.gather_local_1(new_feature)
+
         # Yellow attention blocks
-        x1 = self.sa1(x)
-        x2 = self.sa2(x1)
-        x3 = self.sa3(x2)
-        x4 = self.sa4(x3)
+
+        new_xyz = new_xyz.permute(0, 2, 1)
+        # print('finished gathering')
+        xyz_mod = self.pos_xyz(new_xyz)
+        # print('working after posxyz')
+        x_pt = self.relu(self.bn_int(self.conv_intermediate(feature_1)))
+
+        # print(x_pt.shape, xyz_mod.shape)
+        
+        x1 = self.sa1(x_pt + xyz_mod)
+        x2 = self.sa2(x1 + xyz_mod)
+        x3 = self.sa3(x2 + xyz_mod)
+        x4 = self.sa4(x3 + xyz_mod)
         
         # Concat
         x = concat((x1, x2, x3, x4), dim=1)
@@ -63,19 +115,18 @@ class Point_Transformer_partseg(nn.Module):
         cls_label_one_hot = cls_label.view(batch_size,16,1)
         cls_label_feature = self.label_conv(cls_label_one_hot).repeat(1, 1, N)
 
-        # new_xyz, new_feature = sample_and_group(npoint=512, radius=0.15, nsample=32, xyz=xyz, points=x)         
-        # feature_0 = self.gather_local_0(new_feature)
-        # feature = feature_0.permute(0, 2, 1)
-        # new_xyz, new_feature = sample_and_group(npoint=256, radius=0.2, nsample=32, xyz=new_xyz, points=feature) 
-        # feature_1 = self.gather_local_1(new_feature)
-
-
-        # Global feature from max and avg as in page 4
+        # MA-Pool: Global feature from max and avg as in page 4
         x_global_feature = concat((x_max_feature, x_avg_feature, cls_label_feature), 1) # 1024 + 64
         x = concat((x, x_global_feature), 1) # 1024 * 3 + 64 
+        
+        # segmentation starts
+
+        # LBRD (dark green)
         x = self.relu(self.bns1(self.convs1(x)))
         x = self.dp1(x)
+        # LBR (green)
         x = self.relu(self.bns2(self.convs2(x)))
+        # Linear (light green)
         x = self.convs3(x)
         return x
 
@@ -96,7 +147,7 @@ class SA_Layer(nn.Module):
 
     def forward(self, x):
         x_q = self.q_conv(x).permute(0, 2, 1) # b, n, c 
-        x_k = self.k_conv(x)# b, c, n        
+        x_k = self.k_conv(x) # b, c, n        
         x_v = self.v_conv(x)
         energy = torch.bmm(x_q, x_k) # b, n, n 
         attention = self.softmax(energy)

@@ -47,6 +47,8 @@ def square_distance(src, dst):
     Output:
         dist: per-point square distance, [B, N, M]
     """
+    # print(f'Source shape {src.shape}')
+    # print(f'dst shape {dst.shape}')
     B, N, _ = src.shape
     _, M, _ = dst.shape
     dist = -2 * torch.matmul(src, dst.permute(0, 2, 1))
@@ -107,6 +109,7 @@ def knn_point(nsample, xyz, new_xyz):
         group_idx: grouped points index, [B, S, nsample]
     """
     sqrdists = square_distance(new_xyz, xyz)
+    # print(nsample, xyz.shape, new_xyz.shape)
     _, group_idx = torch.topk(sqrdists, nsample, dim = -1, largest=False, sorted=False)
 
     return group_idx
@@ -162,10 +165,13 @@ def sample_and_group(npoint, radius, nsample, xyz, points):
     S = npoint 
     xyz = xyz.contiguous()
 
+    # print(f'XYZ in sample and group {xyz.shape}')
+
     # fps_idx = pointnet2_utils.furthest_point_sample(xyz, npoint).long() # [B, npoint]
     fps_idx = fps(xyz, npoint).long()
 
     new_xyz = index_points(xyz, fps_idx)
+    # print(f'new xyz shape {new_xyz.shape}')
     new_points = index_points(points, fps_idx)
     # new_xyz = xyz[:]
     # new_points = points[:]
@@ -174,14 +180,16 @@ def sample_and_group(npoint, radius, nsample, xyz, points):
     #idx = query_ball_point(radius, nsample, xyz, new_xyz)
     grouped_xyz = index_points(xyz, idx) # [B, npoint, nsample, C]
 
-    grouped_xyz_norm = grouped_xyz - new_xyz.view(B, S, 1, C)
+    grouped_xyz_norm = grouped_xyz - new_xyz.view(B, S, 1, C) # not used? try to remove and run?
     grouped_points = index_points(points, idx)
+    # Matrix sub
     grouped_points_norm = grouped_points - new_points.view(B, S, 1, -1)
     
+    # Concat & Repeat
     new_points = torch.cat([grouped_points_norm, new_points.view(B, S, 1, -1).repeat(1, 1, nsample, 1)], dim=-1)
     return new_xyz, new_points
 
-
+"""
 
 class CIC(nn.Module):
     def __init__(self, npoint, radius, k, in_channels, output_channels, bottleneck_ratio=2, mlp_num=2, curve_config=None):
@@ -365,3 +373,5 @@ class MaskedMaxPool(nn.Module):
         )  # bs, c, n, 1
         sub_features = torch.squeeze(sub_features, -1)  # bs, c, n
         return sub_xyz, sub_features
+
+"""

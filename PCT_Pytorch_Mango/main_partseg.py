@@ -19,12 +19,14 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from data import ShapeNetPart
-from model import DGCNN_partseg
+# from model import DGCNN_partseg
 import numpy as np
 from torch.utils.data import DataLoader
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
 from plyfile import PlyData, PlyElement
+
+from tqdm import tqdm
 
 #Using PCT
 from pct_partseg_torch import Point_Transformer_partseg
@@ -204,7 +206,7 @@ def train(args, io):
         train_true_seg = []
         train_pred_seg = []
         train_label_seg = []
-        for data, label, seg in train_loader:
+        for data, label, seg in tqdm(train_loader):
             seg = seg - seg_start_index
             label_one_hot = np.zeros((label.shape[0], 16))
             for idx in range(label.shape[0]):
@@ -384,9 +386,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Point Cloud Part Segmentation')
     parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
                         help='Name of the experiment')
-    parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
+    parser.add_argument('--model', type=str, default='pct', metavar='N',
                         choices=['dgcnn', 'pct'],
-                        help='Model to use, [dgcnn]')
+                        help='Model to use, [pct]')
     parser.add_argument('--dataset', type=str, default='shapenetpart', metavar='N',
                         choices=['shapenetpart'])
     parser.add_argument('--class_choice', type=str, default=None, metavar='N',

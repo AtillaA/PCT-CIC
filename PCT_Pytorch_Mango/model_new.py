@@ -55,16 +55,21 @@ class Pct(nn.Module):
         # B, D, N
         x = F.relu(self.bn2(self.conv2(x)))
         x = x.permute(0, 2, 1)
+        print(xyz.shape, x.shape)
         new_xyz, new_feature = sample_and_group(npoint=512, radius=0.15, nsample=32, xyz=xyz, points=x)         
+        # print(f'new feature after sample_and_group1: {new_feature.shape}')
         feature_0 = self.gather_local_0(new_feature)
         feature = feature_0.permute(0, 2, 1)
         new_xyz, new_feature = sample_and_group(npoint=256, radius=0.2, nsample=32, xyz=new_xyz, points=feature) 
+        # print(f'new feature after sample2: {new_feature.shape}')
         feature_1 = self.gather_local_1(new_feature)
 
         x = self.pt_last(feature_1, new_xyz)
         x = torch.cat([x, feature_1], dim=1)
         x = self.conv_fuse(x)
         x = F.adaptive_max_pool1d(x, 1).view(batch_size, -1)
+        
+        # Classification part
         x = F.leaky_relu(self.bn6(self.linear1(x)), negative_slope=0.2)
         x = self.dp1(x)
         x = F.leaky_relu(self.bn7(self.linear2(x)), negative_slope=0.2)
