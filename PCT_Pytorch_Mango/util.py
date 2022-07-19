@@ -1,5 +1,7 @@
 import torch
 import torch.nn.functional as F
+import time
+import torch_geometric.nn as geo
 # from pointnet2_ops import pointnet2_utils
 
 def cal_loss(pred, gold, smoothing=True):
@@ -129,7 +131,7 @@ def get_dists(points1, points2):
     dists = torch.where(dists < 0, torch.ones_like(dists) * 1e-7, dists) # Very Important for dist = 0.
     return torch.sqrt(dists).float()
 
-def fps(xyz, M):
+def fps(xyz, M): # ours
     """
     Sample M points from points according to farthest point sampling (FPS) algorithm.
     :param xyz: shape=(B, N, 3)
@@ -141,13 +143,21 @@ def fps(xyz, M):
     dists = torch.ones(B, N).to(device) * 1e5
     inds = torch.randint(0, N, size=(B, ), dtype=torch.long).to(device)
     batchlists = torch.arange(0, B, dtype=torch.long).to(device)
+
+    start_for = time.time()
+
     for i in range(M):
         centroids[:, i] = inds
         cur_point = xyz[batchlists, inds, :] # (B, 3)
         cur_dist = torch.squeeze(get_dists(torch.unsqueeze(cur_point, 1), xyz), dim=1)
         dists[cur_dist < dists] = cur_dist[cur_dist < dists]
         inds = torch.max(dists, dim=1)[1]
+
+    end_for = time.time()
+    print(f'One for pass: {end_for - start_for}')
+
     return centroids
+
 
 def sample_and_group(npoint, radius, nsample, xyz, points):
     """
@@ -168,7 +178,20 @@ def sample_and_group(npoint, radius, nsample, xyz, points):
     # print(f'XYZ in sample and group {xyz.shape}')
 
     # fps_idx = pointnet2_utils.furthest_point_sample(xyz, npoint).long() # [B, npoint]
+    
+    start_fps = time.time()
     fps_idx = fps(xyz, npoint).long()
+    # fps_idx = geo.fps(xyz, None, 1.0, False)
+    end_fps = time.time()
+    print(f'One fps pass: {end_fps - start_fps}')
+
+    # trial_fps = fps(xyz, npoint)
+    # print("trial_fps: ",trial_fps.shape)
+    # print(trial_fps[0])
+    # print("-"*10)
+    # print(fps_idx[0])
+    # print("geo.fps: ",fps_idx.shape)
+
 
     new_xyz = index_points(xyz, fps_idx)
     # print(f'new xyz shape {new_xyz.shape}')

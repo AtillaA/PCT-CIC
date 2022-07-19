@@ -29,7 +29,7 @@ from plyfile import PlyData, PlyElement
 from tqdm import tqdm
 
 #Using PCT
-from pct_partseg_torch import Point_Transformer_partseg
+from pct_partseg_torch import Point_Transformer_partseg, Point_Transformer_partseg_old
 
 #Using Tensorboard
 from torch.utils.tensorboard import SummaryWriter

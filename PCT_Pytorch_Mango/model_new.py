@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from util import sample_and_group 
+import time
 
 class Local_op(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -55,7 +56,7 @@ class Pct(nn.Module):
         # B, D, N
         x = F.relu(self.bn2(self.conv2(x)))
         x = x.permute(0, 2, 1)
-        print(xyz.shape, x.shape)
+        # print(xyz.shape, x.shape)
         new_xyz, new_feature = sample_and_group(npoint=512, radius=0.15, nsample=32, xyz=xyz, points=x)         
         # print(f'new feature after sample_and_group1: {new_feature.shape}')
         feature_0 = self.gather_local_0(new_feature)

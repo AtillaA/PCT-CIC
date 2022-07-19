@@ -170,7 +170,7 @@ def load_data_semseg(partition, test_area):
 def load_color_partseg():
     colors = []
     labels = []
-    f = open("/rhome/christianh/Machine-Learning-for-3D-Geometry/DGCNN/prepare_data/meta/partseg_colors.txt")
+    f = open("/rhome/atillaa/Machine-Learning-for-3D-Geometry/DGCNN/prepare_data/meta/partseg_colors.txt")
     for line in json.load(f):
         colors.append(line['color'])
         labels.append(line['label'])
