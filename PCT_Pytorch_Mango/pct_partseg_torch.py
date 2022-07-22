@@ -4,7 +4,8 @@ from torch import cat as concat
 import torch.nn.functional as F
 import numpy as np 
 import math 
-from util import sample_and_group 
+# from util import sample_and_group
+from util import CIC
 import time
 
 class Local_op(nn.Module):
@@ -63,6 +64,9 @@ class Point_Transformer_partseg(nn.Module):
         self.bns1 = nn.BatchNorm1d(512)
         self.bns2 = nn.BatchNorm1d(256)
 
+        self.cic11 = CIC(npoint=2048, radius=0.2, k=32, in_channels=128, output_channels=128, bottleneck_ratio=2)
+        self.cic12 = CIC(npoint=2048, radius=0.2, k=32, in_channels=256, output_channels=256, bottleneck_ratio=2)
+
         self.relu = nn.ReLU()
 
     def forward(self, x, cls_label):
@@ -70,6 +74,7 @@ class Point_Transformer_partseg(nn.Module):
         # print(N)
         start_fwd = time.time()
         batch_size, _, N = x.size()
+
         xyz = x.permute(0, 2, 1)
         # Grey: Input Embedding
         x = self.relu(self.bn1(self.conv1(x))) # B, D, N
@@ -81,7 +86,13 @@ class Point_Transformer_partseg(nn.Module):
         # print(xyz.shape, x.shape)
 
         start_sample = time.time()
-        new_xyz, new_feature = sample_and_group(npoint=N, radius=0.15, nsample=32, xyz=xyz, points=x)         
+
+
+        # new_xyz, new_feature = sample_and_group(npoint=N, radius=0.15, nsample=32, xyz=xyz, points=x)
+        print(xyz.shape)
+        new_xyz, new_feature = self.cic11(xyz, x)
+        print(new_xyz.shape)
+
         # print(f'new feature after sample_and_group1: {new_feature.shape}')
         end_sample = time.time()
         print(f'One sample_group pass: {end_sample - start_sample}')
@@ -94,7 +105,11 @@ class Point_Transformer_partseg(nn.Module):
         # print(f'Feature after gather0: {feature_0.shape}')
         feature = feature_0.permute(0, 2, 1)
         # print(f'Feature after permute: {feature.shape}')
-        new_xyz, new_feature = sample_and_group(npoint=N, radius=0.2, nsample=32, xyz=new_xyz, points=feature) 
+
+
+        new_xyz, new_feature = self.cic12(xyz, x)
+
+
         # print(f'new feature after sample_and_group2: {new_feature.shape}')
         feature_1 = self.gather_local_1(new_feature)
         end_sample = time.time()
