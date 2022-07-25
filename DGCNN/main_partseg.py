@@ -194,7 +194,7 @@ def train(args, io):
     criterion = cal_loss
 
     best_test_iou = 0
-    for epoch in tqdm(range(args.epochs)):
+    for epoch in range(args.epochs):
         ####################
         # Train
         ####################
@@ -206,7 +206,7 @@ def train(args, io):
         train_true_seg = []
         train_pred_seg = []
         train_label_seg = []
-        for data, label, seg in train_loader:
+        for data, label, seg in tqdm(train_loader):
             seg = seg - seg_start_index
             label_one_hot = np.zeros((label.shape[0], 16))
             for idx in range(label.shape[0]):

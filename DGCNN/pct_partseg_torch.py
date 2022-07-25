@@ -3,6 +3,7 @@ from torch import nn
 from torch import cat as concat 
 import numpy as np 
 import math
+import time
 
 from curvenet_util import CIC
 
@@ -20,23 +21,34 @@ class Point_Transformer_partseg(nn.Module):
         setting='default'
 
         self.part_num = part_num
+
+        # To use with CIC
         self.conv1 = nn.Conv1d(3, 16, kernel_size=1, bias=False)
         self.conv2 = nn.Conv1d(16, 32, kernel_size=1, bias=False)
 
         self.bn1 = nn.BatchNorm1d(16)
         self.bn2 = nn.BatchNorm1d(32)
 
+        # ------------------------------------- PCT ------------------------------------- #
         # self.conv1 = nn.Conv1d(3, 128, kernel_size=1, bias=False)
         # self.conv2 = nn.Conv1d(128, 128, kernel_size=1, bias=False)
 
         # self.bn1 = nn.BatchNorm1d(128)
         # self.bn2 = nn.BatchNorm1d(128)
+        # ------------------------------------------------------------------------------- #
 
+        # --------------------------------- 2 Layer CIC --------------------------------- #
+        # self.cic11 = CIC(npoint=2048, radius=0.2, k=k, in_channels=additional_channel, output_channels=128, bottleneck_ratio=2, curve_config=curve_config[setting][0])
+        # self.cic12 = CIC(npoint=2048, radius=0.2, k=k, in_channels=128, output_channels=128, bottleneck_ratio=4, curve_config=curve_config[setting][0])
+        # ------------------------------------------------------------------------------- #
+
+        # --------------------------------- 4 Layer CIC --------------------------------- #
         self.cic11 = CIC(npoint=2048, radius=0.2, k=k, in_channels=additional_channel, output_channels=64, bottleneck_ratio=2, curve_config=curve_config[setting][0])
         self.cic12 = CIC(npoint=2048, radius=0.2, k=k, in_channels=64, output_channels=64, bottleneck_ratio=4, curve_config=curve_config[setting][0])
 
         self.cic21 = CIC(npoint=2048, radius=0.4, k=k, in_channels=64, output_channels=128, bottleneck_ratio=2, curve_config=curve_config[setting][1])
         self.cic22 = CIC(npoint=2048, radius=0.4, k=k, in_channels=128, output_channels=128, bottleneck_ratio=4, curve_config=curve_config[setting][1])
+        # ------------------------------------------------------------------------------- #
 
         self.sa1 = SA_Layer(128)
         self.sa2 = SA_Layer(128)
@@ -61,6 +73,8 @@ class Point_Transformer_partseg(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, x, cls_label):
+        # start_fwd = time.time()
+
         batch_size, _, N = x.size()
         xyz = x
         x = self.relu(self.bn1(self.conv1(x))) # B, D, N
@@ -68,24 +82,30 @@ class Point_Transformer_partseg(nn.Module):
 
         # print(f'X after two LBR: {x.shape}')
         # X after two LBR: torch.Size([16, 128, 2048])  
-        #
         
         # print(f"Before SA Layers{x.shape}, N: {N}")
         # x - 16,128,2048   N - 2048
+        # start_cic = time.time()
 
         l1_xyz, l1_points = self.cic11(xyz, x)
+        
+        # end_cic = time.time()
+        # print(f'First cic layer: {end_cic - start_cic}')
+
         # print(f'after cic11, l1_xyz: {l1_xyz.shape}, l1_points: {l1_points.shape}')
          
         l1_xyz, l1_points = self.cic12(l1_xyz, l1_points)
-        # print(f'after cic12, l1_xyz: {l1_xyz.shape}, l1_points: {l1_points.shape}')
+        # # print(f'after cic12, l1_xyz: {l1_xyz.shape}, l1_points: {l1_points.shape}')
         
+        # end_cic_2 = time.time()
+        # print(f'Second cic layer: {end_cic_2 - end_cic}')
         
         l2_xyz, l2_points = self.cic21(l1_xyz, l1_points)
         l2_xyz, l2_points = self.cic22(l2_xyz, l2_points)
 
         # print(f'L2 after CIC:{l2_points.shape}')
 
-        # l2_points = x
+        # l2_points = l1_points
         
         x1 = self.sa1(l2_points)
         x2 = self.sa2(x1)
@@ -97,6 +117,8 @@ class Point_Transformer_partseg(nn.Module):
         # X after convfuse: torch.Size([16, 1024, 2048]) 
         # CIC
         # X after convfuse: torch.Size([16, 1024, 512]) 
+        # CIC second try
+        # 
         x_max, x_max_indices = torch.max(x, 2)
         x_avg = torch.mean(x, 2)
         x_max_feature = x_max.view(batch_size, -1).unsqueeze(-1).repeat(1, 1, N)
@@ -112,6 +134,11 @@ class Point_Transformer_partseg(nn.Module):
         x = self.dp1(x)
         x = self.relu(self.bns2(self.convs2(x)))
         x = self.convs3(x)
+
+        # end_fwd = time.time()
+        # print(f'One fwd: {end_fwd - start_fwd}')
+
+
         return x
 
 
