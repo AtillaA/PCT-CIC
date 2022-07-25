@@ -26,6 +26,8 @@ from util import cal_loss, IOStream
 import sklearn.metrics as metrics
 from plyfile import PlyData, PlyElement
 
+from tqdm import tqdm
+
 #Using PCT
 from pct_partseg_torch import Point_Transformer_partseg
 
@@ -192,7 +194,7 @@ def train(args, io):
     criterion = cal_loss
 
     best_test_iou = 0
-    for epoch in range(args.epochs):
+    for epoch in tqdm(range(args.epochs)):
         ####################
         # Train
         ####################
@@ -384,7 +386,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Point Cloud Part Segmentation')
     parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
                         help='Name of the experiment')
-    parser.add_argument('--model', type=str, default='dgcnn', metavar='N',
+    parser.add_argument('--model', type=str, default='pct', metavar='N',
                         choices=['dgcnn', 'pct'],
                         help='Model to use, [dgcnn]')
     parser.add_argument('--dataset', type=str, default='shapenetpart', metavar='N',
