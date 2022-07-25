@@ -80,8 +80,13 @@ class CurveNet(nn.Module):
 
         l0_points = self.lpfa(xyz, xyz)
 
+        print(f'before cic11, xyz: {xyz.shape}, l0_points: {l0_points.shape}')
         l1_xyz, l1_points = self.cic11(xyz, l0_points)
+        print(f'after cic11, l1_xyz: {l1_xyz.shape}, l1_points: {l1_points.shape}')
+
         l1_xyz, l1_points = self.cic12(l1_xyz, l1_points)
+        print(f'after cic12, l1_xyz: {l1_xyz.shape}, l1_points: {l1_points.shape}')
+        
 
         l2_xyz, l2_points = self.cic21(l1_xyz, l1_points)
         l2_xyz, l2_points = self.cic22(l2_xyz, l2_points)
