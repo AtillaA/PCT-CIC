@@ -57,6 +57,7 @@ def _init_():
         os.makedirs('outputs/'+args.exp_name+'/'+'visualization')
     os.system('cp main_partseg.py outputs'+'/'+args.exp_name+'/'+'main_partseg.py.backup')
     os.system('cp model.py outputs' + '/' + args.exp_name + '/' + 'model.py.backup')
+    os.system('cp pct_partseg_torch.py outputs'+'/'+args.exp_name+'/'+'pct_partseg_torch.py.backup')
     os.system('cp util.py outputs' + '/' + args.exp_name + '/' + 'util.py.backup')
     os.system('cp data.py outputs' + '/' + args.exp_name + '/' + 'data.py.backup')
 
@@ -324,6 +325,16 @@ def train(args, io):
         writer.add_scalar("Accuracy/Test", test_acc, epoch)
         writer.add_scalar("Average Accuracy/Test", avg_per_class_acc, epoch)
         writer.add_scalar("IOU/Test", np.mean(test_ious), epoch)
+
+        outstr = f'[INFO] Saving last epoch model from epoch {epoch} to outputs/{args.exp_name}/models/model.t7'
+        io.cprint(outstr)
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer': opt.state_dict(),
+            'loss': test_loss*1.0/count,
+            'scheduler': scheduler.state_dict()}, 
+            'outputs/%s/models/model_last.t7' % args.exp_name)
 
         if np.mean(test_ious) >= best_test_iou:
             best_test_iou = np.mean(test_ious)
