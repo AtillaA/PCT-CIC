@@ -260,7 +260,7 @@ def train(args, io):
 
         if np.mean(test_ious) >= best_test_iou:
             best_test_iou = np.mean(test_ious)
-            outstr = f'[INFO] Saving the best model from epoch {epoch} to checkpoints/{args.exp_name}/models/model.t7'
+            outstr = f'[INFO] Saving the best model from epoch {epoch} to ../checkpoints/{args.exp_name}/models/model.t7'
             io.cprint(outstr)
             torch.save({
                 'epoch': epoch,
@@ -268,7 +268,7 @@ def train(args, io):
                 'optimizer': opt.state_dict(),
                 'loss': test_loss*1.0/count,
                 'scheduler': scheduler.state_dict()}, 
-                'checkpoints/%s/models/model.t7' % args.exp_name)
+                '../checkpoints/%s/models/model.t7' % args.exp_name)
 
 
 def test(args, io):
