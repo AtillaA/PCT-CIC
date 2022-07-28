@@ -106,9 +106,16 @@ def train(args, io):
     model = CurveNet().to(device)
     model = nn.DataParallel(model)
 
+
     # Tensorboard Log Model   
     tensorBoardOutputPath = '../checkpoints/%s' % args.exp_name # Tensorboard needs to be started in .../DGCNN/
     writer = SummaryWriter(tensorBoardOutputPath)
+
+    if args.model_path:
+        outstr = f'[INFO] Loading model, optimizer, scheduler from {args.model_path}'
+        io.cprint(outstr)
+        checkpoint = torch.load(args.model_path)
+        model.load_state_dict(checkpoint['model_state_dict'])
 
     if args.use_sgd:
         print("Use SGD")
@@ -121,10 +128,16 @@ def train(args, io):
         scheduler = CosineAnnealingLR(opt, args.epochs, eta_min=1e-3)
     elif args.scheduler == 'step':
         scheduler = MultiStepLR(opt, [140, 180], gamma=0.1)
+    starting_epoch = 0
+    if args.model_path:
+        opt.load_state_dict(checkpoint['optimizer'])
+        scheduler.load_state_dict(checkpoint['scheduler'])
+        starting_epoch = checkpoint['epoch'] + 1
+
     criterion = cal_loss
 
     best_test_iou = 0
-    for epoch in range(args.epochs):
+    for epoch in range(starting_epoch, args.epochs):
         ####################
         # Train
         ####################
@@ -247,7 +260,15 @@ def train(args, io):
 
         if np.mean(test_ious) >= best_test_iou:
             best_test_iou = np.mean(test_ious)
-            torch.save(model.state_dict(), '../checkpoints/%s/models/model.t7' % args.exp_name)
+            outstr = f'[INFO] Saving the best model from epoch {epoch} to outputs/{args.exp_name}/models/model.t7'
+            io.cprint(outstr)
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer': opt.state_dict(),
+                'loss': test_loss*1.0/count,
+                'scheduler': scheduler.state_dict()}, 
+                'outputs/%s/models/model.t7' % args.exp_name)
 
 
 def test(args, io):
@@ -260,7 +281,8 @@ def test(args, io):
     seg_start_index = test_loader.dataset.seg_start_index
     model = CurveNet().to(device)
     model = nn.DataParallel(model)
-    model.load_state_dict(torch.load(args.model_path))
+    checkpoint = torch.load(args.model_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
 
     model = model.eval()
     test_acc = 0.0
