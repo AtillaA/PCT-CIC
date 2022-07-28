@@ -257,6 +257,15 @@ def train(args, io):
         writer.add_scalar("Average Accuracy/Test", avg_per_class_acc, epoch)
         writer.add_scalar("IOU/Test", np.mean(test_ious), epoch)
 
+        outstr = f'[INFO] Saving last epoch model from epoch {epoch} to outputs/{args.exp_name}/models/model.t7'
+        io.cprint(outstr)
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer': opt.state_dict(),
+            'loss': test_loss*1.0/count,
+            'scheduler': scheduler.state_dict()}, 
+            'checkpoints/%s/models/model_last.t7' % args.exp_name)
 
         if np.mean(test_ious) >= best_test_iou:
             best_test_iou = np.mean(test_ious)
