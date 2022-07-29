@@ -63,7 +63,7 @@ class Point_Transformer_partseg(nn.Module):
                                    nn.BatchNorm1d(64),
                                    nn.LeakyReLU(negative_slope=0.2))
 
-        self.convs1 = nn.Conv1d(1024 * 3 + 64 + 3, 512, 1)
+        self.convs1 = nn.Conv1d(1024 * 3 + 64, 512, 1)
         self.dp1 = nn.Dropout(0.5)
         self.convs2 = nn.Conv1d(512, 256, 1)
         self.convs3 = nn.Conv1d(256, self.part_num, 1)
@@ -125,7 +125,7 @@ class Point_Transformer_partseg(nn.Module):
         x_avg_feature = x_avg.view(batch_size, -1).unsqueeze(-1).repeat(1, 1, N)
         cls_label_one_hot = cls_label.view(batch_size,16,1)
         cls_label_feature = self.label_conv(cls_label_one_hot).repeat(1, 1, N)
-        x_global_feature = concat((x_max_feature, x_avg_feature, cls_label_feature, l2_xyz), 1) # 1024 + 64 
+        x_global_feature = concat((x_max_feature, x_avg_feature, cls_label_feature), 1) # 1024 + 64 
         # print(f'x shape: {x.shape}, x_global_feature: {x_global_feature.shape}')
         # x shape: torch.Size([16, 1024, 2048]), x_global_feature: torch.
         # Size([16, 2112, 2048])
