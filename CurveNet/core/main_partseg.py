@@ -257,7 +257,7 @@ def train(args, io):
         writer.add_scalar("Average Accuracy/Test", avg_per_class_acc, epoch)
         writer.add_scalar("IOU/Test", np.mean(test_ious), epoch)
 
-        outstr = f'[INFO] Saving last epoch model from epoch {epoch} to ../checkpoints/{args.exp_name}/models/model.t7'
+        outstr = f'[INFO] Saving last epoch model from epoch {epoch} to ../checkpoints/{args.exp_name}/models/model_last.t7'
         io.cprint(outstr)
         torch.save({
             'epoch': epoch,
