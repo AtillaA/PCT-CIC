@@ -25,12 +25,17 @@ import numpy as np
 from torch.utils.data import DataLoader
 from util import cal_loss, IOStream
 import sklearn.metrics as metrics
+from plyfile import PlyData, PlyElement
+
 
 from tqdm import tqdm
 
 #Using Tensorboard
 from torch.utils.tensorboard import SummaryWriter
 
+class_indexs = np.zeros((16,), dtype=int)
+
+class_choices = ['airplane', 'bag', 'cap', 'car', 'chair', 'earphone', 'guitar', 'knife', 'lamp', 'laptop', 'motorbike', 'mug', 'pistol', 'rocket', 'skateboard', 'table']
 seg_num = [4, 2, 2, 4, 4, 3, 3, 2, 4, 2, 6, 2, 3, 3, 3, 3]
 index_start = [0, 4, 6, 8, 12, 16, 19, 22, 24, 28, 30, 36, 38, 41, 44, 47]
 
@@ -56,7 +61,6 @@ def _init_():
     os.system('cp models/curvenet_seg.py ../checkpoints/'+args.exp_name+'/curvenet_seg.py.backup')
 
 def calculate_shape_IoU(pred_np, seg_np, label, class_choice, eva=False):
-    label = label.squeeze()
     shape_ious = []
     category = {}
     for shape_idx in range(seg_np.shape[0]):
@@ -85,6 +89,70 @@ def calculate_shape_IoU(pred_np, seg_np, label, class_choice, eva=False):
         return shape_ious, category
     else:
         return shape_ious
+
+
+def visualization(visu, visu_format, data, pred, seg, label, partseg_colors, class_choice):
+    global class_indexs
+    global visual_warning
+    visu = visu.split('_')
+    for i in range(0, data.shape[0]):
+        RGB = []
+        RGB_gt = []
+        skip = False
+        classname = class_choices[int(label[i])]
+        class_index = class_indexs[int(label[i])]
+        if visu[0] != 'all':
+            if len(visu) != 1:
+                if visu[0] != classname or visu[1] != str(class_index):
+                    skip = True 
+                else:
+                    visual_warning = False
+            elif visu[0] != classname:
+                skip = True 
+            else:
+                visual_warning = False
+        elif class_choice != None:
+            skip = True
+        else:
+            visual_warning = False
+        if skip:
+            class_indexs[int(label[i])] = class_indexs[int(label[i])] + 1
+        else:  
+            if not os.path.exists('../checkpoints/'+args.exp_name+'/'+'visualization'+'/'+classname):
+                os.makedirs('../checkpoints/'+args.exp_name+'/'+'visualization'+'/'+classname)
+            for j in range(0, data.shape[2]):
+                RGB.append(partseg_colors[int(pred[i][j])])
+                RGB_gt.append(partseg_colors[int(seg[i][j])])
+            pred_np = []
+            seg_np = []
+            pred_np.append(pred[i].cpu().numpy())
+            seg_np.append(seg[i].cpu().numpy())
+            xyz_np = data[i].cpu().numpy()
+            xyzRGB = np.concatenate((xyz_np.transpose(1, 0), np.array(RGB)), axis=1)
+            xyzRGB_gt = np.concatenate((xyz_np.transpose(1, 0), np.array(RGB_gt)), axis=1)
+            IoU = calculate_shape_IoU(np.array(pred_np), np.array(seg_np), label[i].cpu().numpy(), class_choice)
+            IoU = str(round(IoU[0], 4))
+            filepath = '../checkpoints/'+args.exp_name+'/'+'visualization'+'/'+classname+'/'+classname+'_'+str(class_index)+'_pred_'+IoU+'.'+visu_format
+            filepath_gt = '../checkpoints/'+args.exp_name+'/'+'visualization'+'/'+classname+'/'+classname+'_'+str(class_index)+'_gt.'+visu_format
+            if visu_format=='txt':
+                np.savetxt(filepath, xyzRGB, fmt='%s', delimiter=' ') 
+                np.savetxt(filepath_gt, xyzRGB_gt, fmt='%s', delimiter=' ') 
+                print('TXT visualization file saved in', filepath)
+                print('TXT visualization file saved in', filepath_gt)
+            elif visu_format=='ply':
+                xyzRGB = [(xyzRGB[i, 0], xyzRGB[i, 1], xyzRGB[i, 2], xyzRGB[i, 3], xyzRGB[i, 4], xyzRGB[i, 5]) for i in range(xyzRGB.shape[0])]
+                xyzRGB_gt = [(xyzRGB_gt[i, 0], xyzRGB_gt[i, 1], xyzRGB_gt[i, 2], xyzRGB_gt[i, 3], xyzRGB_gt[i, 4], xyzRGB_gt[i, 5]) for i in range(xyzRGB_gt.shape[0])]
+                vertex = PlyElement.describe(np.array(xyzRGB, dtype=[('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('red', 'u1'), ('green', 'u1'), ('blue', 'u1')]), 'vertex')
+                PlyData([vertex]).write(filepath)
+                vertex = PlyElement.describe(np.array(xyzRGB_gt, dtype=[('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('red', 'u1'), ('green', 'u1'), ('blue', 'u1')]), 'vertex')
+                PlyData([vertex]).write(filepath_gt)
+                print('PLY visualization file saved in', filepath)
+                print('PLY visualization file saved in', filepath_gt)
+            else:
+                print('ERROR!! Unknown visualization format: %s, please use txt or ply.' % \
+                (visu_format))
+                exit()
+            class_indexs[int(label[i])] = class_indexs[int(label[i])] + 1
 
 def train(args, io):
     train_dataset = ShapeNetPart(partition='trainval', num_points=args.num_points, class_choice=args.class_choice)
@@ -288,6 +356,7 @@ def test(args, io):
 
     #Try to load models
     seg_start_index = test_loader.dataset.seg_start_index
+    partseg_colors = test_loader.dataset.partseg_colors
     model = CurveNet().to(device)
     model = nn.DataParallel(model)
     checkpoint = torch.load(args.model_path)
@@ -319,7 +388,10 @@ def test(args, io):
         test_true_seg.append(seg_np)
         test_pred_seg.append(pred_np)
         test_label_seg.append(label.reshape(-1))
-
+         # visiualization
+        visualization(args.visu, args.visu_format, data, pred, seg, label, partseg_colors, args.class_choice) 
+    if visual_warning and args.visu != '':
+        print('Visualization Failed: You can only choose a point cloud shape to visualize within the scope of the test class')
     test_true_cls = np.concatenate(test_true_cls)
     test_pred_cls = np.concatenate(test_pred_cls)
     test_acc = metrics.accuracy_score(test_true_cls, test_pred_cls)
@@ -374,6 +446,10 @@ if __name__ == "__main__":
                         help='num of points to use')
     parser.add_argument('--model_path', type=str, default='', metavar='N',
                         help='Pretrained model path')
+    parser.add_argument('--visu', type=str, default='',
+                        help='visualize the model')
+    parser.add_argument('--visu_format', type=str, default='ply',
+                        help='file format of visualization')
     args = parser.parse_args()
 
     seed = np.random.randint(1, 10000)
