@@ -168,7 +168,13 @@ def train(args, io):
     if args.model == 'dgcnn':
         model = DGCNN_partseg(args, seg_num_all).to(device)
     elif args.model == 'pct':
-        model = Point_Transformer_partseg(seg_num_all).to(device)
+        model = Point_Transformer_partseg(seg_num_all, args.model).to(device)
+    elif args.model == 'cic2_pos':
+        model = Point_Transformer_partseg(seg_num_all, args.model).to(device)
+    elif args.model == 'cic4':
+        model = Point_Transformer_partseg(seg_num_all, args.model).to(device)
+    elif args.model == 'cic4_pos':
+        model = Point_Transformer_partseg(seg_num_all, args.model).to(device)
     else:
         raise Exception("Not implemented")
     # print(str(model))
@@ -361,7 +367,13 @@ def test(args, io):
     if args.model == 'dgcnn':
         model = DGCNN_partseg(args, seg_num_all).to(device)
     elif args.model == 'pct':
-        model = Point_Transformer_partseg(seg_num_all).to(device)
+        model = Point_Transformer_partseg(seg_num_all, args.model).to(device)
+    elif args.model == 'cic2_pos':
+        model = Point_Transformer_partseg(seg_num_all, args.model).to(device)
+    elif args.model == 'cic4':
+        model = Point_Transformer_partseg(seg_num_all, args.model).to(device)
+    elif args.model == 'cic4_pos':
+        model = Point_Transformer_partseg(seg_num_all, args.model).to(device)
     else:
         raise Exception("Not implemented")
 
@@ -420,8 +432,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Point Cloud Part Segmentation')
     parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
                         help='Name of the experiment')
-    parser.add_argument('--model', type=str, default='pct', metavar='N',
-                        choices=['dgcnn', 'pct'],
+    parser.add_argument('--model', type=str, default='cic4_pos', metavar='N',
+                        choices=['dgcnn', 'pct', 'cic2_pos', 'cic4', 'cic4_pos'],
                         help='Model to use, [dgcnn]')
     parser.add_argument('--dataset', type=str, default='shapenetpart', metavar='N',
                         choices=['shapenetpart'])
