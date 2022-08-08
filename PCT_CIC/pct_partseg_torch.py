@@ -40,19 +40,15 @@ class Point_Transformer_partseg(nn.Module):
             self.bn2 = nn.BatchNorm1d(32)
 
             if model_type == 'cic2_pos':
-                # --------------------------------- 2 Layer CIC --------------------------------- #
                 self.cic11 = CIC(npoint=2048, radius=0.2, k=k, in_channels=additional_channel, output_channels=128, bottleneck_ratio=2, curve_config=curve_config[setting][0])
                 self.cic12 = CIC(npoint=2048, radius=0.2, k=k, in_channels=128, output_channels=128, bottleneck_ratio=4, curve_config=curve_config[setting][0])
-                # ------------------------------------------------------------------------------- #
             
             elif model_type == 'cic4' or model_type == 'cic4_pos':
-                # --------------------------------- 4 Layer CIC --------------------------------- #
                 self.cic11 = CIC(npoint=2048, radius=0.2, k=k, in_channels=additional_channel, output_channels=64, bottleneck_ratio=2, curve_config=curve_config[setting][0])
                 self.cic12 = CIC(npoint=2048, radius=0.2, k=k, in_channels=64, output_channels=64, bottleneck_ratio=4, curve_config=curve_config[setting][0])
 
                 self.cic21 = CIC(npoint=2048, radius=0.4, k=k, in_channels=64, output_channels=128, bottleneck_ratio=2, curve_config=curve_config[setting][1])
                 self.cic22 = CIC(npoint=2048, radius=0.4, k=k, in_channels=128, output_channels=128, bottleneck_ratio=4, curve_config=curve_config[setting][1])
-            # ------------------------------------------------------------------------------- #
         # ------------------------------------------------------------------------------- #
 
         self.sa1 = SA_Layer(128)
