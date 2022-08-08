@@ -22,7 +22,7 @@ Repository: https://github.com/MenghaoGuo/PCT
 Local feature aggregation is an operation that assembles point features of a given key point set, computes the position encodings of the subject point and the neighboring points, and passes the results into relevant transformation and aggregation modules in furtherance of local feature extraction. Even though these operations are feasible for depicting relative local patterns, they are inept with regard to long-range point relations. To that extent, the aggregation strategy introduced by Xiang et al. proposes a new long-range feature aggregation method, namely curve aggregation, for point clouds shape analysis. Initiative of our project is to implement the curve aggregation method upon the Point Cloud Transformer (PCT) of Guo et al., replacing the local neighbor embedding strategy.
 
 <p float="center">
-  <img src="Images/Architecture_PCT_CIC.PNG" width="700" />
+  <img src="images/Architecture_PCT_CIC.png" width="700" />
 </p>
 
 ## Dataset
@@ -34,7 +34,7 @@ Apart from the baseline datasets that are used in PCT (which are ModelNet40 for 
 
 
 <p float="center">
-  <img src="Images/Point_Cloud_Visualization.PNG" width="700" />
+  <img src="images/Point_Cloud_Visualization.png" width="700" />
 </p>
 
 ## Citation  
