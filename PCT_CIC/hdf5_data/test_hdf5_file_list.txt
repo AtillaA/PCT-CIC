@@ -1,2 +1,0 @@
-ply_data_test0.h5
-ply_data_test1.h5
