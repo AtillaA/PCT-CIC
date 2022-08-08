@@ -2,8 +2,6 @@
 
 PCT-CIC Paper: <a href="/docs/PCT-CIC_Paper.pdf" class="image fit"> Here </a>
 
-![Here](docs/PCT-CIC_Paper.pdf "Here")
-
 PCT Paper: https://arxiv.org/pdf/2012.09688.pdf
 
 CurveNet Paper: https://arxiv.org/abs/2105.01288
