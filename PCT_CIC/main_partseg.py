@@ -19,7 +19,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
 from data import ShapeNetPart
-from model import DGCNN_partseg
 import numpy as np
 from torch.utils.data import DataLoader
 from util import cal_loss, IOStream
@@ -165,9 +164,7 @@ def train(args, io):
     #Try to load models
     seg_num_all = train_loader.dataset.seg_num_all
     seg_start_index = train_loader.dataset.seg_start_index
-    if args.model == 'dgcnn':
-        model = DGCNN_partseg(args, seg_num_all).to(device)
-    elif args.model == 'pct':
+    if args.model == 'pct':
         model = Point_Transformer_partseg(seg_num_all, args.model).to(device)
     elif args.model == 'cic2_pos':
         model = Point_Transformer_partseg(seg_num_all, args.model).to(device)
@@ -364,9 +361,7 @@ def test(args, io):
     seg_num_all = test_loader.dataset.seg_num_all
     seg_start_index = test_loader.dataset.seg_start_index
     partseg_colors = test_loader.dataset.partseg_colors
-    if args.model == 'dgcnn':
-        model = DGCNN_partseg(args, seg_num_all).to(device)
-    elif args.model == 'pct':
+    if args.model == 'pct':
         model = Point_Transformer_partseg(seg_num_all, args.model).to(device)
     elif args.model == 'cic2_pos':
         model = Point_Transformer_partseg(seg_num_all, args.model).to(device)
@@ -433,8 +428,8 @@ if __name__ == "__main__":
     parser.add_argument('--exp_name', type=str, default='exp', metavar='N',
                         help='Name of the experiment')
     parser.add_argument('--model', type=str, default='cic4_pos', metavar='N',
-                        choices=['dgcnn', 'pct', 'cic2_pos', 'cic4', 'cic4_pos'],
-                        help='Model to use, [dgcnn]')
+                        choices=['pct', 'cic2_pos', 'cic4', 'cic4_pos'],
+                        help='Model to use, [cic4_pos]')
     parser.add_argument('--dataset', type=str, default='shapenetpart', metavar='N',
                         choices=['shapenetpart'])
     parser.add_argument('--class_choice', type=str, default=None, metavar='N',
