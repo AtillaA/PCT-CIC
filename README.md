@@ -7,17 +7,12 @@ Paper link: https://arxiv.org/pdf/2012.09688.pdf
 Repository: https://github.com/MenghaoGuo/PCT
 
 
-## <font color=red>News</font> :
+## Environment to Reproduce the Trainings
 
-* 2022.6.21 : Tasks carried out by date
-* 2022.6.29 : ..
+[YAML File](project_env.yaml)
 
-## Environment to reproduce the trainings
-
-[yaml file](project_env.yaml)
 
 ## Astract
-
 
 Local feature aggregation is an operation that assembles point features of a given key point set, computes the position encodings of the subject point and the neighboring points, and passes the results into relevant transformation and aggregation modules in furtherance of local feature extraction. Even though these operations are feasible for depicting relative local patterns, they are inept with regard to long-range point relations. To that extent, the aggregation strategy introduced by Xiang et al. proposes a new long-range feature aggregation method, namely curve aggregation, for point clouds shape analysis. Initiative of our project is to implement the curve aggregation method upon the Point Cloud Transformer (PCT) of Guo et al., replacing the local neighbor embedding strategy.
 
@@ -25,17 +20,18 @@ Local feature aggregation is an operation that assembles point features of a giv
   <img src="images/Architecture_PCT_CIC.png" width="700" />
 </p>
 
-## Dataset
 
+## Dataset
 
 Apart from the baseline datasets that are used in PCT (which are ModelNet40 for point cloud classification, ShapeNet for object segmentation, and Stanford 3D Indoor Dataset), we will be exploring various other point cloud datasets (e.g. Partnet) to evaluate and verify our findings.
 
-## Results
 
+## Results
 
 <p float="center">
   <img src="images/Point_Cloud_Visualization.png" width="700" />
 </p>
+
 
 ## Citation  
 
