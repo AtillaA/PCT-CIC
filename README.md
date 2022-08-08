@@ -2,7 +2,7 @@
 
 This README will be updated soon, with required definitions and citations regarding the original PCT implementation by Meng-Hao et al.
 
-PCT-CIC Paper: ![Alt text](docs/PCT-CIC_Paper.pdf "Here")
+PCT-CIC Paper: ![Here](docs/PCT-CIC_Paper.pdf "Here")
 PCT Paper: https://arxiv.org/pdf/2012.09688.pdf
 CurveNet Paper: https://arxiv.org/abs/2105.01288
 
