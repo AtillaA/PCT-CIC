@@ -44,18 +44,18 @@ PCT:
 
 ```
 @article{Guo_2021,
-   title={PCT: Point cloud transformer},
-   volume={7},
-   ISSN={2096-0662},
-   url={http://dx.doi.org/10.1007/s41095-021-0229-5},
-   DOI={10.1007/s41095-021-0229-5},
-   number={2},
-   journal={Computational Visual Media},
-   publisher={Springer Science and Business Media LLC},
-   author={Guo, Meng-Hao and Cai, Jun-Xiong and Liu, Zheng-Ning and Mu, Tai-Jiang and Martin, Ralph R. and Hu, Shi-Min},
-   year={2021},
-   month={Apr},
-   pages={187–199}
+    title={PCT: Point cloud transformer},
+    volume={7},
+    ISSN={2096-0662},
+    url={http://dx.doi.org/10.1007/s41095-021-0229-5},
+    DOI={10.1007/s41095-021-0229-5},
+    number={2},
+    journal={Computational Visual Media},
+    publisher={Springer Science and Business Media LLC},
+    author={Guo, Meng-Hao and Cai, Jun-Xiong and Liu, Zheng-Ning and Mu, Tai-Jiang and Martin, Ralph R. and Hu, Shi-Min},
+    year={2021},
+    month={Apr},
+    pages={187–199}
 }
 ```
 
@@ -74,12 +74,12 @@ CurveNet:
 
 ShapeNet:
 ```
-@inproceedings{shapenet,
-author = {Wu, Zhirong and Song, Shuran and Khosla, Aditya and Yu, Fisher and Zhang, Linguang and Tang, Xiaoou and Xiao, Jianxiong},
-year = {2015},
-month = {06},
-pages = {1912-1920},
-title = {3D ShapeNets: A deep representation for volumetric shapes},
-doi = {10.1109/CVPR.2015.7298801}
+@InProceedings{ShapeNet,
+    author = {Wu, Zhirong and Song, Shuran and Khosla, Aditya and Yu, Fisher and Zhang, Linguang and Tang, Xiaoou and Xiao, Jianxiong},
+    year = {2015},
+    month = {06},
+    pages = {1912-1920},
+    title = {3D ShapeNets: A deep representation for volumetric shapes},
+    doi = {10.1109/CVPR.2015.7298801}
 }
 ```
