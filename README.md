@@ -1,8 +1,8 @@
 # Improving Point Cloud Shape Analysis of a Point Cloud Transformer using Curve Aggregation
 
-This README will be updated soon, with required definitions and citations regarding the original PCT implementation by Meng-Hao et al.
+PCT-CIC Paper: <a href="/docs/PCT-CIC_Paper.pdf" class="image fit"> Here </a>
 
-PCT-CIC Paper: ![Here](docs/PCT-CIC_Paper.pdf "Here")
+![Here](docs/PCT-CIC_Paper.pdf "Here")
 
 PCT Paper: https://arxiv.org/pdf/2012.09688.pdf
 
