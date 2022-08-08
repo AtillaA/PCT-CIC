@@ -1,18 +1,4 @@
-from __future__ import print_function
-import os
 import argparse
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR
-# from data import ShapeNetPart
-from model import DGCNN_partseg
-import numpy as np
-from torch.utils.data import DataLoader
-from util import cal_loss, IOStream
-import sklearn.metrics as metrics
-from plyfile import PlyData, PlyElement
 from torch.utils.tensorboard import SummaryWriter
 
 
