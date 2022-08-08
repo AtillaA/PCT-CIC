@@ -157,4 +157,4 @@ dependencies:
     - widgetsnbextension==3.6.0
     - yarl==1.7.2
     - zipp==3.8.0
-prefix: /rhome/christianh/miniconda3/envs/project_env
+prefix: /path/to/your/conda/envs/project_env

@@ -2,9 +2,6 @@ from platform import architecture
 import torch 
 from torch import nn 
 from torch import cat as concat 
-import numpy as np 
-import math
-import time
 
 from curvenet_util import CIC
 
