@@ -58,6 +58,7 @@ PCT:
    month={Apr},
    pages={187–199}
 }
+```
 
 CurveNet:
 
@@ -72,10 +73,7 @@ CurveNet:
 }
 ```
 
-```
-
 ShapeNet:
-
 ```
 @inproceedings{shapenet,
 author = {Wu, Zhirong and Song, Shuran and Khosla, Aditya and Yu, Fisher and Zhang, Linguang and Tang, Xiaoou and Xiao, Jianxiong},
