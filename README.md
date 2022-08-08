@@ -2,7 +2,9 @@
 
 This README will be updated soon, with required definitions and citations regarding the original PCT implementation by Meng-Hao et al.
 
-Paper link: https://arxiv.org/pdf/2012.09688.pdf
+PCT-CIC Paper: ![Alt text](docs/PCT-CIC_Paper.pdf "Here")
+PCT Paper: https://arxiv.org/pdf/2012.09688.pdf
+CurveNet Paper: https://arxiv.org/abs/2105.01288
 
 Repository: https://github.com/MenghaoGuo/PCT
 
@@ -13,7 +15,7 @@ Repository: https://github.com/MenghaoGuo/PCT
 
 ## Abstract
 
-Local feature aggregation is an operation that assembles point features of a given key point set, computes the position encodings of the subject point and the neighboring points, and passes the results into relevant transformation and aggregation modules in furtherance of local feature extraction. Even though these operations are feasible for depicting relative local patterns, they are inept with regard to long-range point relations. To that extent, the aggregation strategy introduced by Xiang et al. proposes a new long-range feature aggregation method, namely curve aggregation, for point clouds shape analysis. Initiative of our project is to implement the curve aggregation method upon the Point Cloud Transformer (PCT) of Guo et al., replacing the local neighbor embedding strategy.
+<p align="justify"> Local feature aggregation is an operation that assembles point features of a given key point set, computes the position encodings of the subject point and the neighboring points, and passes the results into relevant transformation and aggregation modules in furtherance of local feature extraction. Even though these operations are feasible for depicting relative local patterns, they are inept with regard to long-range point relations. To that extent, the aggregation strategy introduced by Xiang et al. proposes a new long-range feature aggregation method, namely curve aggregation, for point clouds shape analysis. Initiative of our project is to implement the curve aggregation method upon the Point Cloud Transformer (PCT) of Guo et al., replacing the local neighbor embedding strategy. </p>
 
 <p float="center">
   <img src="images/Architecture_PCT_CIC.png" width="700" />
@@ -24,7 +26,7 @@ Local feature aggregation is an operation that assembles point features of a giv
 
 ## Dataset
 
-In order to evaluate our proposed method, we used the ShapeNet Parts dataset for the task of part segmentation. Both PCT and CurveNet used this dataset as the basis for their model evaluation, enabling us to compare our results with theirs. The dataset contains 16,880 meshes categorized into 16 object classes (i.e. plane, car, chair) with 2-5 parts per object and a total of 50 part classes. As is common in other works, the class label is passed to the model during training and inference to facilitate the network to learn class-specific parts. In the inference setting, the class used for part segmentation can be predicted from the classification head.
+<p align="justify"> In order to evaluate our proposed method, we used the ShapeNet Parts dataset for the task of part segmentation. Both PCT and CurveNet used this dataset as the basis for their model evaluation, enabling us to compare our results with theirs. The dataset contains 16,880 meshes categorized into 16 object classes (i.e. plane, car, chair) with 2-5 parts per object and a total of 50 part classes. As is common in other works, the class label is passed to the model during training and inference to facilitate the network to learn class-specific parts. In the inference setting, the class used for part segmentation can be predicted from the classification head. </p>
 
 
 ## Results
@@ -33,12 +35,12 @@ In order to evaluate our proposed method, we used the ShapeNet Parts dataset for
   <img src="images/Point_Cloud_Visualization.png" width="700" />
 </p>
 
-Original PCT framework with the implementation of varying number of curve intervention convolution layers yields marginally higher performance. In particular, achieving 85.7 intersection over union metric compared to 85.4 of CurveNet architecture, demonstrating the effective use of curve grouping and aggregation methods of CurveNet upon PCT. The resultant hybrid PCT-CIC implementation thus verified to be an efficient candidate in the context of object part segmentation task.
+<p align="justify"> Original PCT framework with the implementation of varying number of curve intervention convolution layers yields marginally higher performance. In particular, achieving 85.7 intersection over union metric compared to 85.4 of CurveNet architecture, demonstrating the effective use of curve grouping and aggregation methods of CurveNet upon PCT. The resultant hybrid PCT-CIC implementation thus verified to be an efficient candidate in the context of object part segmentation task. </p>
 
 
 ## Citation
 
-Our project employs the existing networks and dataset provided below. Refer to the respective authors/repositories for further inspection.
+<p align="justify"> Our project employs the existing networks and dataset provided below. Refer to the respective authors/repositories for further inspection. </p>
 
 PCT:
 
