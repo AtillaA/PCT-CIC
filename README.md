@@ -13,13 +13,13 @@ CurveNet Paper: https://arxiv.org/abs/2105.01288
 
 ## Abstract
 
-<p align="justify"> Local feature aggregation is an operation that assembles point features of a given key point set, computes the position encodings of the subject point and the neighboring points, and passes the results into relevant transformation and aggregation modules in furtherance of local feature extraction. Even though these operations are feasible for depicting relative local patterns, they are inept with regard to long-range point relations. To that extent, the aggregation strategy introduced by Xiang et al. proposes a new long-range feature aggregation method, namely curve aggregation, for point clouds shape analysis. Initiative of our project is to implement the curve aggregation method upon the Point Cloud Transformer (PCT) of Guo et al., replacing the local neighbor embedding strategy. </p>
+<p align="justify"> Local feature aggregation is an operation that assembles point features of a given key point set, computes the position encodings of the subject point and the neighboring points, and passes the results into relevant transformation and aggregation modules in furtherance of local feature extraction. Even though these operations are feasible for depicting relative local patterns, they are inept with regard to long-range point relations. To that extent, the aggregation strategy introduced by Xiang et al. proposes a new long-range feature aggregation method, namely curve aggregation, for point cloud shape analysis. The initiative of our project is to implement the curve aggregation method upon the Point Cloud Transformer (PCT) of Guo et al., replacing the local neighbor embedding strategy. </p>
 
 <p float="center">
   <img src="images/Architecture_PCT_CIC.png" width="700" />
 </p>
 
-<p align="justify"> After processing the point cloud into an input embedding using two subsequent Linear-BatchNorm-ReLU (LBR) layers, CIC blocks are introduced. Depending on the variation, two or fours layers of these blocks are included. Afterwards, the embedding which now contains not just local information but also global information from the curve grouping and aggregation is passed to the attention layers. In here each point learns to attend to relevant other points in four subsequent attention layers. After conducting both max pooling and average pooling to further aggregate global information, it is concatenated with the embedding from the attention layers to obtain a feature rich representation. Further processing is done in the Linear-BatchNorm-ReLU-Dropout (LBRD) and LBR layers until each point is classified as one of the part classes. </p>
+<p align="justify"> After processing the point cloud into an input embedding using two subsequent Linear-BatchNorm-ReLU (LBR) layers, CIC blocks are introduced. Depending on the variation, two or four layers of these blocks are included. Afterward, the embedding which now contains not just local information but also global information from the curve grouping and aggregation is passed to the attention layers. Here each point learns to attend to relevant other points in four subsequent attention layers. After conducting both max pooling and average pooling to further aggregate global information, it is concatenated with the embedding from the attention layers to obtain a feature-rich representation. Further processing is done in the Linear-BatchNorm-ReLU-Dropout (LBRD) and LBR layers until each point is classified as one of the part classes. </p>
 
 
 ## Dataset
@@ -33,7 +33,7 @@ CurveNet Paper: https://arxiv.org/abs/2105.01288
   <img src="images/Point_Cloud_Visualization.png" width="700" />
 </p>
 
-<p align="justify"> Original PCT framework with the implementation of varying number of curve intervention convolution layers yields marginally higher performance. In particular, achieving 85.7 intersection over union metric compared to 85.4 of CurveNet architecture, demonstrating the effective use of curve grouping and aggregation methods of CurveNet upon PCT. The resultant hybrid PCT-CIC implementation thus verified to be an efficient candidate in the context of object part segmentation task. </p>
+<p align="justify"> Original PCT framework with the implementation of a varying number of curve intervention convolution layers yields marginally higher performance. In particular, achieving 85.7 intersections over union metric compared to 85.4 of CurveNet architecture, demonstrating the effective use of curve grouping and aggregation methods of CurveNet upon PCT. The resultant hybrid PCT-CIC implementation is thus verified to be an efficient candidate in the context of object part segmentation tasks. </p>
 
 
 ## Citation
